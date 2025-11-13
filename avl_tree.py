@@ -3,21 +3,23 @@ from node import Node
 class AVLTree:
 
     def __init__(self):
-       
+        
         self.root = None
         self.comparison_count = 0 
 
-    def _get_height(self, node):
+    # --- MÉTODOS AUXILIARES O(1) ---
 
+    def _get_height(self, node):
         if not node:
             return 0
         return node.height
 
     def _get_balance(self, node):    
         if not node:
-         return 0
+           return 0
         return self._get_height(node.left) - self._get_height(node.right)
 
+    # --- MÉTODOS DE BALANCEAMENTO (ROTAÇÕES) O(1) ---
 
     def _rotate_right(self, z):
         y = z.left
@@ -32,7 +34,6 @@ class AVLTree:
         return y
 
     def _rotate_left(self, z):
-
         y = z.right
         T2 = y.left
 
@@ -44,8 +45,10 @@ class AVLTree:
 
         return y
 
+    # --- OPERAÇÕES PRINCIPAIS RECURSIVAS O(log n) ---
+
     def insert(self, root, key, data):
-    
+        
         if not root:
             return Node(key, data)
 
@@ -54,8 +57,8 @@ class AVLTree:
         elif key > root.key:
             root.right = self.insert(root.right, key, data)
         else:
-           
             return root
+
         root.height = 1 + max(self._get_height(root.left), self._get_height(root.right))
         balance = self._get_balance(root)
 
@@ -86,14 +89,12 @@ class AVLTree:
             return self.search(root.right, key)
 
     def _get_min_value_node(self, node):
-
         current = node
         while current.left is not None:
             current = current.left
         return current
 
     def delete(self, root, key):
-
         if not root:
             return root
 
@@ -102,7 +103,6 @@ class AVLTree:
         elif key > root.key:
             root.right = self.delete(root.right, key)
         else:
-       
             if root.left is None:
                 temp = root.right
                 root = None
@@ -142,17 +142,62 @@ class AVLTree:
         return root
 
     def print_hierarchy(self, root, level=0):
-     
         if root:
-        
             self.print_hierarchy(root.right, level + 1)
-
             print("    " * level + f"-> [{root.key}] {root.data} (H: {root.height}, FB: {self._get_balance(root)})")
+            self.print_hierarchy(root.left, level + 1) 
 
-            self.print_hierarchy(root.left, level + 1)  
+    def _get_inorder_successor(self, node):
 
-def insert_item(self, key, data):
-    self.root = self.insert(self.root, key, data)
+        if node is None:
+            return None
+        
+        current = node.right
+        while current and current.left:
+            current = current.left
+        return current
 
-def search_item(self, key):
-    return self.search(self.root, key)
+    def _get_inorder_predecessor(self, node):
+
+        if node is None:
+            return None
+
+        current = node.left
+        while current and current.right:
+            current = current.right
+        return current
+    
+    def recommend(self, root, key, limit=5):
+   
+        self.comparison_count = 0 
+
+        target_node = self.search(root, key)
+        
+        if not target_node:
+            print(f"Item com ID {key} não encontrado para recomendação.")
+            return []
+
+        recommendations = []
+        count = 0
+
+        current_suc = target_node
+        while count < limit and current_suc is not None:
+            successor = self._get_inorder_successor(current_suc)
+            if successor and successor.data not in recommendations:
+                recommendations.append(successor.data)
+                current_suc = successor
+                count += 1
+            else:
+                break
+   
+        current_pred = target_node
+        while count < limit and current_pred is not None:
+            predecessor = self._get_inorder_predecessor(current_pred)
+            if predecessor and predecessor.data not in recommendations:
+                recommendations.append(predecessor.data)
+                current_pred = predecessor
+                count += 1
+            else:
+                break
+
+        return recommendations
