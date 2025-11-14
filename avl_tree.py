@@ -2,26 +2,47 @@ from node import Node
 
 class AVLTree:
 
-    def __init__(self):
+   def __init__(self):
         
         self.root = None
         self.comparison_count = 0 
+# --- MÉTODOS PÚBLICOS (Interface para main.py) ---
+
+   def insert_item(self, key, data):
+     """Método público que inicia e gerencia a recursão de inserção."""
+    # Chama o método privado e atualiza o root da classe
+     self.root = self._insert(self.root, key, data)
+
+   def search_item(self, key):
+     """Método público que inicia a busca."""
+    # Chama o método privado
+     return self._search(self.root, key)
+
+   def delete_item(self, key):
+     """Método público que inicia e gerencia a remoção."""
+    # Chama o método privado e atualiza o root da classe
+     self.root = self._delete(self.root, key)
+    
+   def recommend_item(self, key, limit=5):
+      """Método público para recomendação."""
+      # Chama o método recommend
+      return self.recommend(key, limit)
 
     # --- MÉTODOS AUXILIARES O(1) ---
 
-    def _get_height(self, node):
+   def _get_height(self, node):
         if not node:
             return 0
         return node.height
 
-    def _get_balance(self, node):    
+   def _get_balance(self, node):    
         if not node:
            return 0
         return self._get_height(node.left) - self._get_height(node.right)
 
     # --- MÉTODOS DE BALANCEAMENTO (ROTAÇÕES) O(1) ---
 
-    def _rotate_right(self, z):
+   def _rotate_right(self, z):
         y = z.left
         T2 = y.right
 
@@ -33,7 +54,7 @@ class AVLTree:
 
         return y
 
-    def _rotate_left(self, z):
+   def _rotate_left(self, z):
         y = z.right
         T2 = y.left
 
@@ -47,15 +68,15 @@ class AVLTree:
 
     # --- OPERAÇÕES PRINCIPAIS RECURSIVAS O(log n) ---
 
-    def insert(self, root, key, data):
+   def _insert(self, root, key, data):
         
         if not root:
             return Node(key, data)
 
         if key < root.key:
-            root.left = self.insert(root.left, key, data)
+            root.left = self._insert(root.left, key, data)
         elif key > root.key:
-            root.right = self.insert(root.right, key, data)
+            root.right = self._insert(root.right, key, data)
         else:
             return root
 
@@ -78,30 +99,30 @@ class AVLTree:
 
         return root
 
-    def search(self, root, key):
+   def _search(self, root, key):
     
         self.comparison_count += 1
         if not root or root.key == key:
             return root
         if key < root.key:
-            return self.search(root.left, key)
+            return self._search(root.left, key)
         else:
-            return self.search(root.right, key)
+            return self._search(root.right, key)
 
-    def _get_min_value_node(self, node):
+   def _get_min_value_node(self, node):
         current = node
         while current.left is not None:
             current = current.left
         return current
 
-    def delete(self, root, key):
+   def _delete(self, root, key):
         if not root:
             return root
 
         if key < root.key:
-            root.left = self.delete(root.left, key)
+            root.left = self._delete(root.left, key)
         elif key > root.key:
-            root.right = self.delete(root.right, key)
+            root.right = self._delete(root.right, key)
         else:
             if root.left is None:
                 temp = root.right
@@ -117,7 +138,7 @@ class AVLTree:
             root.key = temp.key
             root.data = temp.data
             
-            root.right = self.delete(root.right, temp.key)
+            root.right = self._delete(root.right, temp.key)
 
         if root is None:
             return root
@@ -141,13 +162,13 @@ class AVLTree:
 
         return root
 
-    def print_hierarchy(self, root, level=0):
+   def print_hierarchy(self, root, level=0):
         if root:
             self.print_hierarchy(root.right, level + 1)
             print("    " * level + f"-> [{root.key}] {root.data} (H: {root.height}, FB: {self._get_balance(root)})")
             self.print_hierarchy(root.left, level + 1) 
 
-    def _get_inorder_successor(self, node):
+   def _get_inorder_successor(self, node):
 
         if node is None:
             return None
@@ -157,7 +178,7 @@ class AVLTree:
             current = current.left
         return current
 
-    def _get_inorder_predecessor(self, node):
+   def _get_inorder_predecessor(self, node):
 
         if node is None:
             return None
@@ -167,37 +188,36 @@ class AVLTree:
             current = current.right
         return current
     
-    def recommend(self, root, key, limit=5):
+   def recommend(self, key, limit=5):
    
-        self.comparison_count = 0 
+      self.comparison_count = 0 
 
-        target_node = self.search(root, key)
+      target_node = self._search(self.root, key)
         
-        if not target_node:
+      if not target_node:
             print(f"Item com ID {key} não encontrado para recomendação.")
             return []
 
-        recommendations = []
-        count = 0
+      recommendations_set = set()
 
-        current_suc = target_node
-        while count < limit and current_suc is not None:
-            successor = self._get_inorder_successor(current_suc)
-            if successor and successor.data not in recommendations:
-                recommendations.append(successor.data)
-                current_suc = successor
-                count += 1
-            else:
-                break
+      current_suc = target_node
+      while len(recommendations_set) < limit:
+        successor = self._get_inorder_successor(current_suc)
+
+        if successor is None:
+           break
+         
+        recommendations_set.add(successor.data) 
+        current_suc = successor
    
-        current_pred = target_node
-        while count < limit and current_pred is not None:
-            predecessor = self._get_inorder_predecessor(current_pred)
-            if predecessor and predecessor.data not in recommendations:
-                recommendations.append(predecessor.data)
-                current_pred = predecessor
-                count += 1
-            else:
-                break
+      current_pred = target_node
+      while len(recommendations_set) < limit:
+         predecessor = self._get_inorder_predecessor(current_pred)
 
-        return recommendations
+         if predecessor is None:
+             break
+         
+         recommendations_set.add(predecessor.data)
+         current_pred = predecessor
+        
+      return list(recommendations_set)
