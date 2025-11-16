@@ -1,23 +1,34 @@
-import sys
-# Adiciona o diretório atual ao path para garantir que as importações funcionem 
-# se você não tiver feito 'pip install -e .' ou configurado o ambiente.
-# Este é um truque comum em projetos pequenos.
-sys.path.append('.') 
-
+from data_loader import load_data_from_file, insert_data_into_tree
 from avl_tree import AVLTree
-from data_loader import load_data_into_tree 
-# Assumimos que o Integrante 2 colocará a lógica de recomendação na AVLTree.
-# Se ele criar um módulo separado (ex: recommendation_module), importe-o aqui.
+
+# 1. CARREGAMENTO DOS DADOS (Executado uma vez na inicialização)
+srhp_tree = AVLTree()
+
+data_file_path = 'banco_data.json'
+print("Iniciando o Sistema de Recomendação...")
+dados = load_data_from_file(data_file_path)
+insert_data_into_tree(srhp_tree, dados)
+print("-" * 50)
+print("✅ Carregamento inicial concluído. Árvore pronta para uso!")
+
+def get_positive_int_input(prompt):
+    """Lê uma entrada do usuário e garante que seja um ID inteiro positivo."""
+    while True:
+        try:
+            value = input(prompt)
+            # Verifica se o valor é numérico e converte para inteiro
+            num = int(value) 
+            if num <= 0:
+                print("⚠️ O ID deve ser um número inteiro positivo (maior que zero).")
+            else:
+                return num
+        except ValueError:
+            print("❌ Entrada inválida. Por favor, digite apenas números inteiros.")
 
 def main():
     """Função principal que inicializa e executa o loop da CLI."""
-    srhp_tree = AVLTree()
-    
-    # --- 1. CARREGAMENTO INICIAL DOS DADOS (Obrigatório) ---
-    print("\n--- INICIALIZAÇÃO DO SISTEMA DE RECOMENDAÇÃO SRHP ---")
-    load_data_into_tree(srhp_tree) # Carrega os 10.000 itens do banco_data.json
-    print("-" * 50)
-    
+
+
     while True:
         # --- 2. MENU DE INTERAÇÃO (Entrada e Saída) ---
         print("\n--- MENU SRHP - Catálogo AVL ---")
@@ -34,14 +45,14 @@ def main():
         try:
             if choice == '1':
                 # --- FUNCIONALIDADE INSERÇÃO (Integr. 1) ---
-                key = int(input("  Digite o ID (Key) numérico: "))
+                key = get_positive_int_input(" Digite o ID (Key) numérico: ")
                 data = input("  Digite o Nome/Descrição: ")
                 srhp_tree.insert_item(key, data)
                 print(f"✅ Item '{data}' (ID: {key}) inserido e árvore rebalanceada.")
                 
             elif choice == '2':
                 # --- FUNCIONALIDADE BUSCA (Integr. 1) ---
-                key = int(input("  Digite o ID (Key) para busca: "))
+                key = get_positive_int_input(" Digite o ID (Key) para busca: ")
                 result = srhp_tree.search_item(key)
                 if result:
                     print(f"🔎 Encontrado: ID {result.key}, Nome: {result.data} (AVL garantida!)")
@@ -50,7 +61,7 @@ def main():
 
             elif choice == '3':
                 # --- FUNCIONALIDADE REMOÇÃO (Integr. 1) ---
-                key = int(input("  Digite o ID (Key) do item a ser removido: "))
+                key = get_positive_int_input(" Digite o ID (Key)do item a ser removido: ")
                 # A sua função delete deve ser encapsulada em um método público, assim como o insert:
                 srhp_tree.root = srhp_tree.delete(srhp_tree.root, key)
                 print(f"🗑️ Item com ID {key} removido (se existente) e árvore rebalanceada.")
@@ -63,7 +74,7 @@ def main():
 
             elif choice == '5':
                 # --- LÓGICA DE NEGÓCIO (Responsabilidade Integr. 2) ---
-                key = int(input("  ID do produto/categoria para obter sugestões: "))
+                key = get_positive_int_input(" Digite o ID (Key) ID do produto/categoria para obter sugestões: ")
                 # O Integrante 2 implementará este método na AVLTree
                 # recommendations = srhp_tree.recommend_products_item(key) 
                 
