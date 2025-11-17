@@ -1,5 +1,6 @@
 from data_loader import load_data_from_file, insert_data_into_tree
 from avl_tree import AVLTree
+from analysis_module import run_performance_test
 
 # 1. CARREGAMENTO DOS DADOS (Executado uma vez na inicialização)
 srhp_tree = AVLTree()
@@ -63,7 +64,7 @@ def main():
                 # --- FUNCIONALIDADE REMOÇÃO (Integr. 1) ---
                 key = get_positive_int_input(" Digite o ID (Key)do item a ser removido: ")
                 # A sua função delete deve ser encapsulada em um método público, assim como o insert:
-                srhp_tree.root = srhp_tree.delete(srhp_tree.root, key)
+                srhp_tree.delete_item(key)
                 print(f"🗑️ Item com ID {key} removido (se existente) e árvore rebalanceada.")
 
             elif choice == '4':
@@ -74,7 +75,7 @@ def main():
 
             elif choice == '5':
                 # --- LÓGICA DE NEGÓCIO (Responsabilidade Integr. 2) ---
-                key = get_positive_int_input(" Digite o ID (Key) ID do produto/categoria para obter sugestões: ")
+                key = get_positive_int_input(" Digite o ID do produto/categoria para obter sugestões: ")
                 # O Integrante 2 implementará este método na AVLTree
                 # recommendations = srhp_tree.recommend_products_item(key) 
                 
@@ -86,12 +87,12 @@ def main():
 
 
             elif choice == '6':
-                # --- ANÁLISE DE DESEMPENHO (Responsabilidade Integr. 3) ---
-                print("\n... Chamada para o Módulo de Análise de Complexidade ...")
-                # O Integrante 3 fará a medição de tempo e a comparação O(n) vs O(log n)
-                # Exemplo: analysis_module.run_performance_test(srhp_tree, 10000)
-                print("⏳ Módulo em desenvolvimento. Integrante 3 deve implementar a comparação Big-O aqui.")
 
+                print("\n--- INICIANDO TESTES DE COMPLEXIDADE BIG-O ---")
+                # Chama a função de análise, passando a árvore e a lista de dados
+                run_performance_test(srhp_tree, dados)
+                print("--- ANÁLISE CONCLUÍDA ---")
+                
             elif choice == '7':
                 print("👋 Encerrando o Sistema de Recomendação SRHP. Trabalho em equipe concluído!")
                 break
