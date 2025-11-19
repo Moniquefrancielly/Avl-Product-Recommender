@@ -5,7 +5,7 @@ from analysis_module import run_performance_test
 # 1. CARREGAMENTO DOS DADOS (Executado uma vez na inicialização)
 srhp_tree = AVLTree()
 
-data_file_path = 'banco_data.json'
+data_file_path = "Avl-Product-Recommender/banco_data.json"
 print("Iniciando o Sistema de Recomendação...")
 dados = load_data_from_file(data_file_path)
 insert_data_into_tree(srhp_tree, dados)
