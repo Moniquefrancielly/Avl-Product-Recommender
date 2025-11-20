@@ -52,9 +52,14 @@ def insert_data_into_tree(tree: AVLTree, data: list):
     # Assumindo que cada item tem um 'id' (chave) e 'data' (payload)
     for item in data:
         try:
-            key = item['id']   
-            payload = item['nome'] 
+            item['id'] = int(item['id']) 
+            if item.get("pai_id"):
+                item["pai_id"] = int(item["pai_id"])
+
+            key = item["id"]
+            payload = item
             tree.insert_item(key, payload)
+            
         except KeyError as e:
             # Captura erro se o formato dos dados estiver errado
             print(f"AVISO: Item ignorado devido à chave ausente: {e} no item {item}")

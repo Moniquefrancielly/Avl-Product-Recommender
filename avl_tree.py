@@ -1,4 +1,5 @@
 from node import Node
+import unicodedata
 
 class AVLTree:
 
@@ -19,6 +20,18 @@ class AVLTree:
         # Limpa o contador de comparações e chama a função recursiva
         self.comparison_count = 0 
         return self._search(self.root, key)
+    
+    def search_by_name(self, query):
+        """Busca um produto ou categoria pelo nome/palavra-chave.
+    Esta é uma busca O(n) necessária para usabilidade.
+    Retorna uma lista de dicionários encontrados."""
+        if not self.root:
+            return []
+        normalized_query = self._normalize_string(query) 
+        matches = []
+        #Inicia a busca recursiva do nó raiz
+        self._find_all_matches(self.root, normalized_query, matches)
+        return matches
 
     def delete_item(self, key):
         """Método público que inicia e gerencia a remoção."""
@@ -43,6 +56,15 @@ class AVLTree:
         if not node:
            return 0
         return self._get_height(node.left) - self._get_height(node.right)
+    
+    def _normalize_string(self, text):
+        """Remove acentos e caracteres diacríticos, e converte para minúsculas."""
+        if not isinstance(text, str):
+            return ""
+        
+        # Remove acentos e converte para minúsculas
+        text = unicodedata.normalize('NFD', text).encode('ascii', 'ignore').decode("utf-8")
+        return text.lower()
 
     # ----------------------------------------------------------------------
     # --- MÉTODOS DE BALANCEAMENTO (ROTAÇÕES) O(1) ---
@@ -76,9 +98,11 @@ class AVLTree:
 
     def _insert(self, root, key, data):
         """Método recursivo para inserção e balanceamento."""
+        key = int(key)
         
         if not root:
             return Node(key, data)
+        root.key = int(root.key)
 
         if key < root.key:
             root.left = self._insert(root.left, key, data)
@@ -110,11 +134,19 @@ class AVLTree:
 
     def _search(self, root, key):
         """Método recursivo para busca."""
+
+        if root is None:
+            return None
+        try:
+            key = int(key)
+            node_key = int(root.key)
+        except:
+            node_key = root.key
     
         self.comparison_count += 1
-        if not root or root.key == key:
+        if node_key == key:
             return root
-        if key < root.key:
+        if key < node_key:
             return self._search(root.left, key)
         else:
             return self._search(root.right, key)
@@ -125,6 +157,28 @@ class AVLTree:
         while current.left is not None:
             current = current.left
         return current
+    
+    def _find_all_matches(self, root, normalized_query, matches):
+        """Método recursivo para fazer um percorrimento completo (O(n)) na árvore."""
+        if root is None:
+            return
+        #Percorre sub árvore esquerda
+        self._find_all_matches(root.left, normalized_query, matches)
+
+        # Verifica nó atual
+        if hasattr(root, 'data') and isinstance(root.data, dict):
+           item_name = root.data.get('nome')
+           if item_name:
+              try:
+               item_name_normalized = self._normalize_string(item_name)
+               if normalized_query in item_name_normalized:
+                matches.append(root.data)
+              except Exception as e:
+               # Se houver erro em algum nó, continua com os próximos
+               print(f"⚠️  Erro ao processar nó {root.key}: {e}")
+        pass        
+        
+        self._find_all_matches(root.right, normalized_query, matches)
 
     def _delete(self, root, key):
         """Método recursivo para deleção e balanceamento."""
@@ -216,29 +270,32 @@ class AVLTree:
     # ----------------------------------------------------------------------
     # --- NOVO MÉTODO: BUSCA HIERÁRQUICA RECURSIVA O(n) ---
 
-    def _find_by_parent_id(self, root, target_parent_id, found_items, target_id):
+    def _find_by_parent_id(self, root, target_parent_id, recommendations, original_key):
         """
         Função auxiliar recursiva (In-Order) para coletar itens que compartilham 
         o mesmo 'pai_id'. Complexidade O(n) (varredura completa).
         """
         if root is None:
             return
+        
+        stack = [root]
+        while stack:
+            current_node = stack.pop()
 
-        # 1. Navega na subárvore esquerda (recursão)
-        self._find_by_parent_id(root.left, target_parent_id, found_items, target_id)
+            if isinstance(current_node.data, dict) and 'pai_id' in current_node.data:
+                try:
+                    item_pai_id = int(current_node.data['pai_id']) 
+                except (ValueError, TypeError):
+                     item_pai_id = -1 
+                if item_pai_id == target_parent_id:
+                    # Evita recomendar o próprio item buscado
+                    if current_node.key != original_key:
+                        recommendations.append(current_node.data)
 
-        # 2. Visita o nó atual e verifica o pai_id
-        item_data = root.data
-        if item_data.get('tipo') in ['Produto', 'Subcategoria']:
-            # Verifica se o ID do pai do nó atual corresponde ao ID alvo
-            if item_data.get('pai_id') == target_parent_id:
-                # Evita duplicar o item que iniciou a recomendação
-                if item_data.get('id') != target_id and item_data not in found_items:
-                    found_items.append(item_data)
-
-        # 3. Navega na subárvore direita (recursão)
-        self._find_by_parent_id(root.right, target_parent_id, found_items, target_id)
-
+            if current_node.right:
+                stack.append(current_node.right)
+            if current_node.left:
+                stack.append(current_node.left)
 
     # ----------------------------------------------------------------------
     # --- MÉTODO PRINCIPAL DE RECOMENDAÇÃO (VERSÃO FINAL) ---
@@ -248,7 +305,13 @@ class AVLTree:
         Combina recomendação hierárquica (recursiva, O(n)) com recomendação 
         por vizinhança AVL (in-order, O(log n) por passo).
         """
-        self.comparison_count = 0 
+        target_node = self.search_item(key)
+        if not target_node or not isinstance(target_node.data, dict):
+            print(f"Item com ID {key} não encontrado ou com dados inválidos para recomendação.")
+            return []
+        
+        recommendations = []
+        target_data = target_node.data
 
         # 1. Busca o nó alvo (O(log n))
         target_node = self._search(self.root, key)
@@ -261,10 +324,20 @@ class AVLTree:
         
         # 2. Recomendação por Hierarquia (Forte) - O(n)
         target_parent_id = target_node.data.get('pai_id')
+        try:
+               target_parent_id = int(target_parent_id)
+        except (ValueError, TypeError):
+            target_parent_id = 0
         
-        if target_parent_id is not None:
-            # Chama a função recursiva de busca hierárquica na árvore inteira
-            self._find_by_parent_id(self.root, target_parent_id, recommendations, key)
+        if target_parent_id > 0:
+            recommendation_target = target_parent_id
+            print(f"... Buscando IRMÃOS (mesmo PAI ID: {recommendation_target}) ...")
+
+        else:
+            recommendation_target = key
+            print(f"... Buscando FILHOS (PAI ID: {recommendation_target}) ...")
+
+        self._find_by_parent_id(self.root, recommendation_target, recommendations, key)
             
         # Retorna se a busca hierárquica já preencheu ou excedeu o limite
         if len(recommendations) >= limit:
@@ -276,10 +349,8 @@ class AVLTree:
         current_suc = target_node
         while len(recommendations) < limit:
             successor = self._get_inorder_successor(current_suc)
+            if successor is None: break
 
-            if successor is None:
-                break
-            
             # Garante que o item não foi incluído antes e é adicionado à lista
             if successor.data not in recommendations:
                 recommendations.append(successor.data) 
@@ -291,8 +362,7 @@ class AVLTree:
         while len(recommendations) < limit:
             predecessor = self._get_inorder_predecessor(current_pred)
 
-            if predecessor is None:
-                break
+            if predecessor is None: break
             
             # Garante que o item não foi incluído antes
             if predecessor.data not in recommendations:
@@ -300,7 +370,6 @@ class AVLTree:
             
             current_pred = predecessor
             
-        return recommendations
-    #testando 1 
-    #testando 2
+        return recommendations[:limit]
+    
     
