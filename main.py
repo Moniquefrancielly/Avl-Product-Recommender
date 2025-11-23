@@ -1,16 +1,26 @@
 from data_loader import load_data_from_file, insert_data_into_tree
 from avl_tree import AVLTree
 from analysis_module import run_performance_test
+from benchmark import run_analysis_and_report
+from display_manager import DisplayManager
+import time
 
 # 1. CARREGAMENTO DOS DADOS (Executado uma vez na inicialização)
 srhp_tree = AVLTree()
 
 data_file_path = 'banco_data.json'
+print("")
 print("Iniciando o Sistema de Recomendação...")
+print("")
 dados = load_data_from_file(data_file_path)
+print("")
 insert_data_into_tree(srhp_tree, dados)
-print("-" * 50)
+print("")
 print("✅ Carregamento inicial concluído. Árvore pronta para uso!")
+print("")
+print(">•" * 40)
+print("\nCarregando menu principal...")
+time.sleep(3)
 
 def get_positive_int_input(prompt):
     """Lê uma entrada do usuário e garante que seja um ID inteiro positivo."""
@@ -67,11 +77,14 @@ if test_node:
     print(f"✅ Busca por ID funciona. Nó 1: {test_node.data}")
 else:
     print("❌ Busca por ID NÃO funciona - problema na árvore")
-        
 
+def modulo_analise_complexidade():
+    display = DisplayManager()
+    display.mostrar_analise_completa()
     
 def main():
     """Função principal que inicializa e executa o loop da CLI."""
+    display = DisplayManager()
 
 
     while True:
@@ -81,9 +94,10 @@ def main():
         print("2. Buscar Categoria/Produto (O(log n))")
         print("3. Remover Categoria/Produto (O(log n))")
         print("4. Visualizar Estrutura Hierárquica")
-        print("5. Módulo de Recomendação (Integr. 2)")
-        print("6. Módulo de Análise de Complexidade (Integr. 3)")
-        print("7. Sair")
+        print("5. Módulo de Recomendação ")
+        print("6. Módulo de Análise de Complexidade ")
+        print("7. Módulo de Análise de recursividade")
+        print("8. Sair")
         
         choice = input("\nEscolha uma opção: ")
 
@@ -155,10 +169,13 @@ def main():
                 print(f"🗑️ Item com ID {key} removido (se existente) e árvore rebalanceada.")
 
             elif choice == '4':
-                # --- FUNCIONALIDADE IMPRESSÃO (Integr. 1) ---
-                print("\n" + "="*20 + " ESTRUTURA HIERÁRQUICA " + "="*20)
-                srhp_tree.print_hierarchy(srhp_tree.root)
-                print("="*64)
+                # --- FUNCIONALIDADE IMPRESSÃO  ---
+                print("\nAbrindo visualização gráfica...")
+                try:
+                   from gui_visualizer import open_visualizer
+                   open_visualizer(srhp_tree)
+                except Exception as e:
+                 print(f"❌ Erro ao abrir visualização gráfica: {e}")
 
             elif choice == '5':
                 # --- MÓDULO DE RECOMENDAÇÃO (Integr. 2) ---
@@ -181,13 +198,48 @@ def main():
 
 
             elif choice == '6':
+                print("\n[MÓDULO DE ANÁLISE] Iniciando testes de complexidade...")
+                print("🔬 Executando teste fixo: 10.000 itens | 10.000 operações")
+    
+                try:
+                   from benchmark import run_analysis_and_report
+                   resultado = run_analysis_and_report()
+                   print(resultado)
+        
+                except ImportError:
+                    print("❌ Módulo de análise não encontrado.")
+                except Exception as e:
+                    print(f"❌ Erro: {e}")
 
-                print("\n--- INICIANDO TESTES DE COMPLEXIDADE BIG-O ---")
-                # Chama a função de análise, passando a árvore e a lista de dados
-                run_performance_test(srhp_tree, dados)
-                print("--- ANÁLISE CONCLUÍDA ---")
-                
+
             elif choice == '7':
+                print("\n[ANÁLISE DE RECURSIVIDADE] Analisando chamadas recursivas...")
+
+                try:
+                    from recursion_analysis import analyze_recursion_performance, print_recursion_complexity
+        
+                     # Carrega alguns dados para teste
+                    from data_loader import load_data_from_file
+                    test_data = load_data_from_file('banco_data.json')[:200]  # 200 itens para teste
+        
+                    if test_data:
+                        from avl_tree import AVLTree
+                        test_tree = AVLTree()
+            
+                        # Análise prática
+                        results = analyze_recursion_performance(test_tree, test_data)
+            
+                        # Explicação teórica
+                        print_recursion_complexity()
+                    else:
+                      print("❌ Não há dados para análise de recursividade.")
+            
+                except ImportError:
+                 print("❌ Módulo de análise de recursividade não encontrado.")
+                except Exception as e:
+                   print(f"❌ Erro na análise de recursividade: {e}")
+
+            elif choice == '8':
                 print("👋 Encerrando o Sistema de Recomendação SRHP. Trabalho em equipe concluído!")
                 break
                 
@@ -195,10 +247,14 @@ def main():
                 print("❌ Opção inválida. Por favor, escolha um número de 1 a 7.")
 
         except ValueError:
-            print("❌ Entrada inválida. Por favor, digite um número inteiro.")
+            # Captura erros se a entrada não for um número inteiro (embora tratemos a string)
+            # ou se houver um problema na conversão dentro dos sub-módulos.
+            print("❌ Entrada inválida. Por favor, digite um número inteiro válido para o menu.")
+        
         except Exception as e:
-            print(f"❌ Ocorreu um erro inesperado: {e}")
-
+            # Captura quaisquer outros erros inesperados (como falha no I/O ou AVL mal implementada)
+            print(f"❌ Ocorreu um erro inesperado durante a execução da opção: {e}")
+            print("Por favor, verifique a implementação dos módulos.")
 
 if __name__ == "__main__":
     main()

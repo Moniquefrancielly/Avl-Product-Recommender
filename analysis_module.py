@@ -8,6 +8,33 @@ def list_search(data_list, target_key):
             return item
     return None
 
+def list_insert(data_list, item):
+    """
+    Função de inserção em lista simples (O(1))
+    
+    Args:
+        data_list: Lista onde inserir o item
+        item: Dicionário com os dados do produto
+    """
+    data_list.append(item)
+
+def list_delete_by_id(data_list, target_key):
+    """
+    Função de remoção em lista simples (O(n))
+    
+    Args:
+        data_list: Lista de onde remover o item
+        target_key: ID do item a ser removido
+    
+    Returns:
+        True se removeu, False se não encontrou
+    """
+    for i, item in enumerate(data_list):
+        if item['id'] == target_key:
+            data_list.pop(i)
+            return True
+    return False
+
 def run_performance_test(avl_tree, data_list, num_tests=1000):
     """
     Mede e compara o tempo de busca em Lista Simples (O(n)) e AVL Tree (O(log n)).
