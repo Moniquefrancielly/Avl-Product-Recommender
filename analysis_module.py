@@ -43,15 +43,23 @@ def run_performance_test(avl_tree, data_list, num_tests=1000):
     print("\n[DEBUG] Função de performance iniciada. Executando testes...")
     
     # Prepara a lista de IDs
-    all_keys = [item['id'] for item in data_list] 
-    
-    # ... (restante da validação de num_tests) ...
+    all_keys = [item['id'] for item in data_list]
 
     if not all_keys:
         print("🚫 Erro: Não há IDs carregados na lista para realizar o teste.")
         return
-        
-    test_keys = random.sample(all_keys, num_tests)
+
+    # Ajuste para caso o número de testes seja maior que o total de IDs
+    if num_tests > len(all_keys):
+        print(
+            f"⚠️ Aviso: num_tests ({num_tests}) é maior do que o total de itens ({len(all_keys)}). "
+            f"Ajustando para {len(all_keys)}."
+        )
+
+    num_real_tests = min(num_tests, len(all_keys))
+
+    # Agora garantimos que nunca haverá ValueError aqui
+    test_keys = random.sample(all_keys, num_real_tests)
     
     # ----------------------------------------------------
     # 2. Teste 1: Lista Simples (O(n)) - SEM SETUP

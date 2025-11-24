@@ -110,3 +110,46 @@ def test_recommendation_basic():
     # deve sugerir irmão primeiro
     ids = [r["id"] for r in rec]
     assert 3 in ids
+
+def test_avl_ll_rotation():
+    tree = AVLTree()
+    tree.insert_item(30, {})
+    tree.insert_item(20, {})
+    tree.insert_item(10, {})
+    assert tree.root.key == 20
+def test_avl_rr_rotation():
+    tree = AVLTree()
+    tree.insert_item(10, {})
+    tree.insert_item(20, {})
+    tree.insert_item(30, {})
+    assert tree.root.key == 20
+def test_avl_lr_rotation():
+    tree = AVLTree()
+    tree.insert_item(30, {})
+    tree.insert_item(10, {})
+    tree.insert_item(20, {})
+    assert tree.root.key == 20
+def test_avl_rl_rotation():
+    tree = AVLTree()
+    tree.insert_item(10, {})
+    tree.insert_item(30, {})
+    tree.insert_item(20, {})
+    assert tree.root.key == 20
+def test_avl_delete_two_children():
+    tree = AVLTree()
+    tree.insert_item(20, {})
+    tree.insert_item(10, {})
+    tree.insert_item(30, {})
+    tree.insert_item(25, {})
+    tree.insert_item(40, {})
+
+    tree.delete_item(20)
+    assert tree.search_item(20) is None
+def test_avl_delete_rebalance():
+    tree = AVLTree()
+    for x in [50, 30, 70, 20, 40, 60, 80]:
+        tree.insert_item(x, {})
+
+    tree.delete_item(20)
+    assert tree.root.key == 50
+
